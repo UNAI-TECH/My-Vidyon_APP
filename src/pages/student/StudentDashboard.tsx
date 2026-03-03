@@ -8,8 +8,9 @@ import { StatCard } from '@/components/common/StatCard';
 import { CourseCard } from '@/components/cards/CourseCard';
 import { AssignmentCard } from '@/components/cards/AssignmentCard';
 import { NotificationCard } from '@/components/cards/NotificationCard';
-import { AreaChart } from '@/components/charts/AreaChart';
-import { DonutChart } from '@/components/charts/DonutChart';
+import { AdCard } from '@/components/cards/AdCard';
+import { AdCarousel } from '@/components/cards/AdCarousel';
+import { NotificationDynamicCard } from '@/components/cards/NotificationDynamicCard';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/i18n/TranslationContext';
 import { supabase } from '@/lib/supabase';
@@ -21,12 +22,8 @@ import {
   Calendar,
   CheckCircle,
   DollarSign,
+  GraduationCap,
 } from 'lucide-react';
-
-// Fallback notifications if real ones are empty
-const getPlaceholderNotifications = (t: any) => [
-  { title: 'Welcome', message: 'Welcome to your new real-time dashboard.', type: 'info' as const, time: 'Just now' },
-];
 
 export function StudentDashboard() {
   const { user } = useAuth();
@@ -90,15 +87,6 @@ export function StudentDashboard() {
     },
     enabled: !!(user?.institutionId || studentProfile?.institution_id),
   });
-  // 11. Calculate chart data from real records
-  const chartAttendanceData = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => {
-    return { name: day, value: stats.attendancePercentage ? parseInt(stats.attendancePercentage) : 0 };
-  });
-
-  const chartGradeDistribution = [
-    { name: 'Graded', value: grades.length },
-    { name: 'Pending', value: assignments.filter(a => a.status === 'pending').length },
-  ];
 
   return (
     <StudentLayout>
@@ -162,29 +150,32 @@ export function StudentDashboard() {
         </div>
       </section>
 
-      {/* Native Ad / Announcement */}
-      <section className="native-ad-card shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-        <div className="native-ad-badge">Announcement</div>
-        <div className="native-ad-content">
-          <div className="native-ad-image-container relative">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-primary to-orange-400 flex items-center justify-center text-white shadow-inner">
-              <TrendingUp className="w-10 h-10" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
-              <div className="w-2 h-2 bg-white rounded-full animate-ping" />
-            </div>
-          </div>
-          <div className="native-ad-text">
-            <h4 className="native-ad-title">Upgrade Your Performance!</h4>
-            <p className="native-ad-description">
-              Our AI Tutor is now enhanced with real-time doubt solving and personalized study plans. Boost your grades today!
-            </p>
-            <div className="mt-2 flex items-center gap-2 text-primary font-bold text-xs">
-              Explore Now <TrendingUp className="w-3 h-3" />
-            </div>
-          </div>
-        </div>
-      </section>
+      <AdCarousel
+        ads={[
+          {
+            title: "New Stationeries & Learning Tools",
+            description: "Upgrade your performance with our latest collection of premium stationeries and advanced AI learning tools.",
+            Icon: TrendingUp,
+            iconBgColor: "bg-gradient-to-tr from-primary to-orange-400 text-white",
+            badgeText: "New Arrival"
+          },
+          {
+            title: "Join the Science Olympiad 2024",
+            description: "Register now for the biggest inter-school science competition and win exciting scholarships.",
+            Icon: GraduationCap,
+            iconBgColor: "bg-gradient-to-tr from-blue-500 to-indigo-600 text-white",
+            badgeText: "Competition"
+          },
+          {
+            title: "Creative Arts Workshop",
+            description: "Unleash your creativity this weekend! Join our masterclass for sketching and digital art.",
+            Icon: BookOpen,
+            iconBgColor: "bg-gradient-to-tr from-purple-500 to-pink-500 text-white",
+            badgeText: "Workshop"
+          }
+        ]}
+        className="mb-6"
+      />
 
       {/* Stats Grid - 2 columns on mobile, 4 on desktop */}
       <div className="stats-grid mb-6 sm:mb-8">
@@ -229,22 +220,10 @@ export function StudentDashboard() {
         />
       </div>
 
-      {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="lg:col-span-2 dashboard-card p-4 sm:p-6">
-          <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Attendance Trend</h3>
-          <div className="chart-container-responsive">
-            <AreaChart data={chartAttendanceData} color="hsl(var(--student))" height={220} />
-          </div>
-        </div>
-        <div className="dashboard-card p-4 sm:p-6">
-          <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Assignment Progress</h3>
-          <div className="chart-container-responsive">
-            <DonutChart data={chartGradeDistribution} height={220} />
-          </div>
-        </div>
+      {/* Notifications Row */}
+      <div className="mb-6 sm:mb-8">
+        <NotificationDynamicCard />
       </div>
-
 
     </StudentLayout>
   );

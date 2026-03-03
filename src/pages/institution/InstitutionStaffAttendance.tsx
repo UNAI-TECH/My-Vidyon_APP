@@ -4,8 +4,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '@/context/AuthContext';
 import { useState, useEffect } from 'react';
 import CryptoJS from 'crypto-js';
-import { Calendar, RefreshCw, ShieldCheck } from 'lucide-react';
+import { Calendar, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AdCard } from '@/components/cards/AdCard';
 
 const SECRET_KEY = import.meta.env.VITE_QR_SECRET || 'myvidyon-qr-secret-fallback'; // Use env variable for production
 
@@ -42,6 +43,16 @@ export function InstitutionStaffAttendance() {
             <PageHeader
                 title="Staff Attendance QR"
                 subtitle="Display this QR code for faculty members to scan for their daily attendance"
+            />
+
+            <AdCard
+                title="Boost Staff Morale with Rewards"
+                description="Our new 'Teacher of the Month' widget is now available for your digital entrance boards. Increase engagement and retention."
+                Icon={Sparkles}
+                iconBgColor="bg-gradient-to-tr from-amber-400 to-orange-600 text-white"
+                badgeText="New Feature"
+                variant="compact"
+                className="mb-8"
             />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">

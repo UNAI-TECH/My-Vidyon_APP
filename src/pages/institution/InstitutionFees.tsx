@@ -31,12 +31,13 @@ interface FeeComponent {
     title: string;
     amount: string;
 }
-import { Trash2, Plus, Search, Filter, Download, CreditCard, Clock, CheckCircle, ChevronRight, Check, Loader2, School, Send, Mail, Phone, MapPin, Printer, IndianRupee, FileText, Users, ArrowLeft, Info, Layers, GraduationCap, ArrowRight } from 'lucide-react';
+import { Trash2, Plus, Search, Filter, Download, CreditCard, Clock, CheckCircle, ChevronRight, Check, Loader2, School, Send, Mail, Phone, MapPin, Printer, IndianRupee, FileText, Users, ArrowLeft, Info, Layers, GraduationCap, ArrowRight, Home, Sparkles } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { InvoiceView } from '@/components/common/InvoiceView';
 import { useInstitution } from '@/context/InstitutionContext';
 import { toast } from 'sonner';
+import { AdCard } from '@/components/cards/AdCard';
 
 export function InstitutionFees() {
     const { user } = useAuth();
@@ -701,6 +702,16 @@ export function InstitutionFees() {
                     </Button>
                 }
 
+            />
+
+            <AdCard
+                title="Secure Your Institution's Future"
+                description="Explore prime real estate opportunities for campus expansion and staff housing near high-growth educational hubs."
+                Icon={Home}
+                iconBgColor="bg-gradient-to-tr from-institution to-indigo-600 text-white"
+                badgeText="Growth Partner"
+                variant="compact"
+                className="mb-8"
             />
 
             {/* Statistics Section */}

@@ -2,7 +2,7 @@ import { SearchProvider } from "@/context/SearchContext";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import { WebSocketProvider } from "@/context/WebSocketContext";
@@ -124,31 +124,7 @@ import { CanteenSettings } from "./pages/canteen/CanteenSettings";
 
 import { App as CapacitorApp } from '@capacitor/app';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 2, // 2 minutes (prevents constant spinners)
-      gcTime: 1000 * 60 * 10, // 10 minutes
-      refetchOnWindowFocus: true,
-      retry: 1,
-    },
-  },
-});
-
-// Sync data when app returns from background
-CapacitorApp.addListener('appStateChange', ({ isActive }) => {
-  if (isActive) {
-    console.log('🚀 App resumed - Refetching focused queries');
-
-    // Forcefully refetch all active queries to ensure data (attendance, subjects, etc.) 
-    // is fresh when the phone is turned back on.
-    queryClient.invalidateQueries();
-    queryClient.refetchQueries({ type: 'active', stale: true });
-
-    // Trigger focus refetch for visible queries
-    window.dispatchEvent(new FocusEvent('focus'));
-  }
-});
+import { queryClient } from "@/lib/queryClient";
 
 const App = () => {
   return (

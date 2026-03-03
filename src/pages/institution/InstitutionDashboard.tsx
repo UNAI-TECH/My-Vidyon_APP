@@ -7,6 +7,8 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { DataTable } from '@/components/common/DataTable';
 import { Badge } from '@/components/common/Badge';
+import { AdCard } from '@/components/cards/AdCard';
+import { MapPin } from 'lucide-react';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { BarChart } from '@/components/charts/BarChart';
@@ -344,7 +346,28 @@ export function InstitutionDashboard() {
         />
       </div>
 
-      {/* Charts Row */}
+      {/* Institution Ads */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <AdCard
+          title="Institutional Growth & Updates"
+          description="Explore our new campus expansion plans and infrastructure upgrades for the upcoming academic year."
+          Icon={TrendingUp}
+          iconBgColor="bg-gradient-to-tr from-institution to-indigo-600 text-white"
+          badgeText="Updates"
+          variant="compact"
+          className="lg:col-span-1"
+        />
+        <AdCard
+          title="Prime Plots for School Extension"
+          description="Limited availability! Invest in prime land plots near the campus for future school extension or residential staff quarters."
+          Icon={MapPin}
+          iconBgColor="bg-gradient-to-tr from-yellow-400 to-amber-600 text-white"
+          badgeText="Real Estate"
+          variant="compact"
+          className="lg:col-span-1"
+        />
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 sm:mb-8">
         <div className="lg:col-span-2 dashboard-card p-4 sm:p-6">
           <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Enrollment Trend (Cumulative)</h3>

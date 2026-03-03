@@ -6,6 +6,7 @@ import { useParentDashboard } from '@/hooks/useParentDashboard';
 import { Phone, Shield, School, User, Calendar, CreditCard, AlertCircle, Clock, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/common/Badge';
+import { AdCard } from '@/components/cards/AdCard';
 
 export function ParentDashboard() {
     const { user } = useAuth();
@@ -95,26 +96,14 @@ export function ParentDashboard() {
                 </div>
             </section>
 
-            {/* Native Ad / Announcement */}
-            <section className="native-ad-card shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/parent/fees')}>
-                <div className="native-ad-badge">Recommended</div>
-                <div className="native-ad-content">
-                    <div className="native-ad-image-container relative">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-orange-400 to-red-500 flex items-center justify-center text-white shadow-inner">
-                            <CreditCard className="w-10 h-10" />
-                        </div>
-                    </div>
-                    <div className="native-ad-text">
-                        <h4 className="native-ad-title">Pay Fees Online & Get Rewards!</h4>
-                        <p className="native-ad-description">
-                            Pay your children's tuition fees before the end of this month to earn Vidyon Points and exclusive school partner vouchers.
-                        </p>
-                        <div className="mt-2 flex items-center gap-2 text-primary font-bold text-xs">
-                            Pay Now <CreditCard className="w-3 h-3" />
-                        </div>
-                    </div>
-                </div>
-            </section>
+            <AdCard
+                title="Improve your child's skills!"
+                description="Discover our handpicked educational partners offering advanced learning tools and stationery for kids."
+                Icon={CreditCard}
+                iconBgColor="bg-gradient-to-tr from-orange-400 to-red-500 text-white"
+                onClick={() => navigate('/parent/fees')}
+                badgeText="Recommended"
+            />
 
             {/* Children Cards */}
             <div id="children-section" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6 mb-8">
@@ -248,6 +237,17 @@ export function ParentDashboard() {
                     </div>
                 </div>
             )}
+
+            {/* Security/Support Ad */}
+            <AdCard
+                title="Your Child's Safety is Our Priority"
+                description="Learn about our new smart tracking system and campus security protocols."
+                Icon={Shield}
+                iconBgColor="bg-gradient-to-tr from-green-500 to-emerald-600 text-white"
+                badgeText="Security Info"
+                variant="compact"
+                className="mb-8"
+            />
 
             {/* Emergency Contacts */}
             <div id="emergency-section">

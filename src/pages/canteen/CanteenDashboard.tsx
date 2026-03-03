@@ -3,6 +3,8 @@ import { useState, useMemo, useEffect } from 'react';
 import { CanteenLayout } from '@/layouts/CanteenLayout';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/common/Badge';
+import { AdCard } from '@/components/cards/AdCard';
+import { Apple } from 'lucide-react';
 import {
     CheckCircle2,
     XCircle,
@@ -343,6 +345,15 @@ export function CanteenDashboard() {
                     )}
                 </div>
             </div>
+
+            <AdCard
+                title="Healthy Snacks for Students"
+                description="Promote healthy eating habits with our new range of nutritious snacks and organic lunch options available now."
+                Icon={Apple}
+                iconBgColor="bg-gradient-to-tr from-green-400 to-emerald-600 text-white"
+                badgeText="Canteen Update"
+                className="mb-8"
+            />
 
             {viewMode === 'classes' && (
                 <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 md:gap-6 animate-in fade-in slide-in-from-bottom-5 duration-500">

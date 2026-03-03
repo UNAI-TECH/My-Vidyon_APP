@@ -498,31 +498,43 @@
 
   /* Native-looking Advertisement/Announcement Card */
   .native-ad-card {
-    @apply relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-background to-accent/20 border border-primary/20 p-4 sm:p-6 mb-6;
+    @apply relative overflow-hidden rounded-2xl bg-white border border-border shadow-sm p-4 sm:p-5 mb-6 transition-all duration-300;
+  }
+
+  .native-ad-card:hover {
+    @apply shadow-md border-primary/30;
+  }
+
+  .native-ad-card::before {
+    content: '';
+    @apply absolute top-0 left-0 w-1 h-full bg-primary/40;
   }
 
   .native-ad-badge {
-    @apply absolute top-3 right-3 px-2 py-0.5 rounded-full bg-primary/20 text-primary text-[8px] font-bold uppercase tracking-wider;
+    @apply absolute top-3 right-3 px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[8px] font-bold uppercase tracking-wider border border-border/50;
   }
 
   .native-ad-content {
-    @apply flex flex-col sm:flex-row items-center gap-4 sm:gap-6;
-  }
-
-  .native-ad-image {
-    @apply w-16 h-16 sm:w-24 sm:h-24 rounded-xl object-cover shadow-sm bg-primary/10;
+    @apply flex flex-row items-center gap-4 sm:gap-5;
   }
 
   .native-ad-text {
-    @apply flex-1 text-center sm:text-left;
+    @apply flex-1 text-left;
   }
 
   .native-ad-title {
-    @apply text-base sm:text-lg font-bold text-foreground mb-1;
+    @apply text-sm sm:text-base font-bold text-foreground mb-1 leading-tight;
   }
 
   .native-ad-description {
-    @apply text-xs sm:text-sm text-muted-foreground line-clamp-2;
+    @apply text-xs text-muted-foreground line-clamp-2 leading-relaxed;
+  }
+
+  /* Decorative Dots for premium look */
+  .deco-dots {
+    background-image: radial-gradient(circle, currentColor 0.5px, transparent 0.5px);
+    background-size: 8px 8px;
+    opacity: 0.15;
   }
 }
 

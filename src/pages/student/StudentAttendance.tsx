@@ -12,6 +12,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 import { format } from 'date-fns';
+import { AdCard } from '@/components/cards/AdCard';
+import { BookOpenCheck } from 'lucide-react';
 
 export function StudentAttendance() {
   const { t } = useTranslation();
@@ -141,6 +143,16 @@ export function StudentAttendance() {
       <PageHeader
         title={t.nav.attendance}
         subtitle={t.dashboard.overview}
+      />
+
+      <AdCard
+        title="Stay Consistent, Stay Ahead!"
+        description="Students with over 90% attendance are 2x more likely to excel in final exams. See our latest study tips."
+        Icon={BookOpenCheck}
+        iconBgColor="bg-gradient-to-tr from-green-400 to-emerald-600 text-white"
+        badgeText="Study Tip"
+        variant="compact"
+        className="mb-6"
       />
 
       {/* Stats */}

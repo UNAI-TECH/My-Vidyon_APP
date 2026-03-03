@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
 import { User, UserRole, AuthState, LoginCredentials, ROLE_ROUTES } from '@/types/auth';
 import { useNavigate } from 'react-router-dom';
-import { supabase, isSupabaseConfigured, setActiveAccount, capacitorStorage } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured, testSupabaseConnection, setActiveAccount, capacitorStorage } from '@/lib/supabase';
 import { Preferences } from '@capacitor/preferences';
 import { toast } from 'sonner';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -658,6 +658,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       console.error('[AUTH] Login error:', error);
+
+      // Diagnostic: Test connection on failure
+      const connTest = await testSupabaseConnection();
+      console.log('[AUTH] Connection Diagnostic:', connTest);
+      if (!connTest.success) {
+        console.error('[AUTH] ❌ Supabase connectivity check failed:', connTest.error);
+        toast.error(`Connectivity Issue: ${connTest.error}`);
+      }
+
       setState(prev => ({ ...prev, isLoading: false }));
       toast.error(error.message || "Login failed");
       throw error;

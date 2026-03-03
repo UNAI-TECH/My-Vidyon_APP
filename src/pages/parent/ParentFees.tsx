@@ -3,7 +3,7 @@ import { ParentLayout } from '@/layouts/ParentLayout';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Badge } from '@/components/common/Badge';
 import { Button } from '@/components/ui/button';
-import { IndianRupee, CreditCard, CheckCircle, Receipt, Download } from 'lucide-react';
+import { IndianRupee, CreditCard, CheckCircle, Receipt, Download, ShieldCheck, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from '@/i18n/TranslationContext';
 import { useAuth } from '@/context/AuthContext';
@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase';
 import { InvoiceView } from '@/components/common/InvoiceView';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { AdCard } from '@/components/cards/AdCard';
 
 export function ParentFees() {
     const { t } = useTranslation();
@@ -132,6 +133,16 @@ export function ParentFees() {
                 <PageHeader
                     title={t.parent.fees.title}
                     subtitle={t.parent.fees.subtitle}
+                />
+
+                <AdCard
+                    title="Protect Your Family's Education"
+                    description="Get comprehensive education insurance coverage for your children at exclusive partner rates."
+                    Icon={ShieldCheck}
+                    iconBgColor="bg-gradient-to-tr from-blue-500 to-indigo-600 text-white"
+                    badgeText="Financial Security"
+                    variant="compact"
+                    className="mb-6"
                 />
 
                 {/* Summary Cards */}
@@ -346,4 +357,3 @@ export function ParentFees() {
         </>
     );
 }
- 

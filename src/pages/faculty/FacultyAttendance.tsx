@@ -26,6 +26,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { AdCard } from '@/components/cards/AdCard';
+import { Award } from 'lucide-react';
 import { useEffect } from 'react';
 import { useWebSocketContext } from '@/context/WebSocketContext';
 
@@ -238,6 +240,16 @@ export function FacultyAttendance() {
             <PageHeader
                 title="Attendance Management"
                 subtitle="Mark and manage student attendance for your assigned class"
+            />
+
+            <AdCard
+                title="Celebrate Consistency!"
+                description="Recognize students with 100% monthly attendance with our new automated certificate generator."
+                Icon={Award}
+                iconBgColor="bg-gradient-to-tr from-yellow-400 to-amber-600 text-white"
+                badgeText="Faculty Tip"
+                variant="compact"
+                className="mb-6"
             />
 
             <div className="dashboard-card mb-6">

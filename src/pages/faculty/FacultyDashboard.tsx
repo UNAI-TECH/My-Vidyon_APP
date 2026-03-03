@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { CourseCard } from '@/components/cards/CourseCard';
+import { AdCard } from '@/components/cards/AdCard';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useFacultyDashboard } from '@/hooks/useFacultyDashboard';
@@ -105,26 +106,14 @@ export function FacultyDashboard() {
           </div>
         </section>
 
-        {/* Native Ad / Announcement */}
-        <section className="native-ad-card shadow-lg hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/faculty/calendar')}>
-          <div className="native-ad-badge">Staff Update</div>
-          <div className="native-ad-content">
-            <div className="native-ad-image-container relative">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-faculty to-blue-400 flex items-center justify-center text-white shadow-inner">
-                <Users className="w-10 h-10" />
-              </div>
-            </div>
-            <div className="native-ad-text">
-              <h4 className="native-ad-title">New Academic Calendar Published!</h4>
-              <p className="native-ad-description">
-                The updated academic calendar for the upcoming semester is now available. Please review the important dates and events.
-              </p>
-              <div className="mt-2 flex items-center gap-2 text-faculty font-bold text-xs">
-                {t.common.view} Calendar <Calendar className="w-3 h-3" />
-              </div>
-            </div>
-          </div>
-        </section>
+        <AdCard
+          title="Upcoming Institution Meetups"
+          description="Connect with other educators and stay updated with the latest institutional growth and teaching methodologies."
+          Icon={Users}
+          iconBgColor="bg-gradient-to-tr from-faculty to-blue-400 text-white"
+          onClick={() => navigate('/faculty/calendar')}
+          badgeText="Staff Update"
+        />
 
         {/* Stats Grid - Real-time Data */}
         <div className="stats-grid mb-6 sm:mb-8">

@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
+import { AdCard } from '@/components/cards/AdCard';
+import { Laptop } from 'lucide-react';
 
 export function StudentCourses() {
   const { t } = useTranslation();
@@ -37,6 +39,16 @@ export function StudentCourses() {
       <PageHeader
         title={t.nav.courses}
         subtitle={t.dashboard.overview}
+      />
+
+      <AdCard
+        title="New AI Learning Tools for Courses"
+        description="Master your subjects faster with our integrated AI tutor and real-time doubt clearing sessions."
+        Icon={Laptop}
+        iconBgColor="bg-gradient-to-tr from-primary to-indigo-600 text-white"
+        badgeText="Tool Update"
+        variant="compact"
+        className="mb-6"
       />
 
       {isLoading ? (

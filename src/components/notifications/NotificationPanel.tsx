@@ -36,7 +36,7 @@ const TypeIcon = ({ type }: { type: NotificationType }) => {
     }
 };
 
-export function NotificationPanel({ className }: { className?: string }) {
+export function NotificationPanel({ className, hideFooter = false }: { className?: string, hideFooter?: boolean }) {
     const { notifications, loading } = useNotifications();
     const navigate = useNavigate();
     const { user } = useAuth();
@@ -53,7 +53,7 @@ export function NotificationPanel({ className }: { className?: string }) {
                 </Badge>
             </div>
 
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 min-h-0">
                 {loading ? (
                     <div className="flex justify-center items-center h-40">
                         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
@@ -125,11 +125,13 @@ export function NotificationPanel({ className }: { className?: string }) {
                 )}
             </ScrollArea>
 
-            <div className="p-4 border-t bg-muted/20 text-center">
-                <button className="text-sm text-primary hover:underline">
-                    Mark all as read
-                </button>
-            </div>
+            {!hideFooter && (
+                <div className="p-4 border-t bg-muted/20 text-center">
+                    <button className="text-sm text-primary hover:underline">
+                        Mark all as read
+                    </button>
+                </div>
+            )}
         </div>
     );
 }

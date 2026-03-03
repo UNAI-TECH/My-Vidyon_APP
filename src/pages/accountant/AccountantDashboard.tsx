@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/common/Badge';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { AdCard } from '@/components/cards/AdCard';
+import { ShieldCheck } from 'lucide-react';
 
 const COLORS = ['#10b981', '#ef4444', '#f59e0b'];
 
@@ -208,6 +210,14 @@ export function AccountantDashboard() {
                     change="Enrolled"
                 />
             </div>
+
+            <AdCard
+                title="Professional Tax Accounting Made Easy"
+                description="Streamline your institutional tax filings and audits with our partner financial compliance tools."
+                Icon={ShieldCheck}
+                iconBgColor="bg-gradient-to-tr from-blue-500 to-cyan-600 text-white"
+                badgeText="Financial Tool"
+            />
 
             {/* Main Content Area */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
