@@ -6,6 +6,7 @@ import { InstitutionLayout } from '@/layouts/InstitutionLayout';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { DataTable } from '@/components/common/DataTable';
+import { AdPlaceholder } from '@/components/common/AdPlaceholder';
 import { Badge } from '@/components/common/Badge';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { DonutChart } from '@/components/charts/DonutChart';
@@ -343,6 +344,8 @@ export function InstitutionDashboard() {
           change="Across all groups"
         />
       </div>
+
+      <AdPlaceholder format="banner" provider="google" slotId="institution-dash-banner-1" className="mb-6 sm:mb-8" />
 
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 sm:mb-8">

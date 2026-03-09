@@ -6,6 +6,7 @@ import { useParentDashboard } from '@/hooks/useParentDashboard';
 import { Phone, Shield, School, User, Calendar, CreditCard, AlertCircle, Clock, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/common/Badge';
+import { AdPlaceholder } from '@/components/common/AdPlaceholder';
 
 export function ParentDashboard() {
     const { user } = useAuth();
@@ -115,6 +116,8 @@ export function ParentDashboard() {
                     </div>
                 </div>
             </section>
+
+            <AdPlaceholder format="banner" provider="google" slotId="parent-dash-banner-1" className="mb-8" />
 
             {/* Children Cards */}
             <div id="children-section" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-4 sm:mt-6 mb-8">

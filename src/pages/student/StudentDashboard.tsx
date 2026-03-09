@@ -10,6 +10,7 @@ import { AssignmentCard } from '@/components/cards/AssignmentCard';
 import { NotificationCard } from '@/components/cards/NotificationCard';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { DonutChart } from '@/components/charts/DonutChart';
+import { AdPlaceholder } from '@/components/common/AdPlaceholder';
 import { useAuth } from '@/context/AuthContext';
 import { useTranslation } from '@/i18n/TranslationContext';
 import { supabase } from '@/lib/supabase';
@@ -185,6 +186,8 @@ export function StudentDashboard() {
           </div>
         </div>
       </section>
+
+      <AdPlaceholder format="banner" provider="google" slotId="student-dash-banner-1" className="mb-6 sm:mb-8" />
 
       {/* Stats Grid - 2 columns on mobile, 4 on desktop */}
       <div className="stats-grid mb-6 sm:mb-8">

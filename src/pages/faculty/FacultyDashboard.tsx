@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/common/StatCard';
 import { CourseCard } from '@/components/cards/CourseCard';
+import { AdPlaceholder } from '@/components/common/AdPlaceholder';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useFacultyDashboard } from '@/hooks/useFacultyDashboard';
@@ -125,6 +126,8 @@ export function FacultyDashboard() {
             </div>
           </div>
         </section>
+
+        <AdPlaceholder format="banner" provider="google" slotId="faculty-dash-banner-1" className="mb-6 sm:mb-8" />
 
         {/* Stats Grid - Real-time Data */}
         <div className="stats-grid mb-6 sm:mb-8">
