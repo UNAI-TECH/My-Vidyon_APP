@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { InstitutionLayout } from '@/layouts/InstitutionLayout';
 import { PageHeader } from '@/components/common/PageHeader';
 import { BookOpen, Users, GraduationCap, LayoutGrid, List } from 'lucide-react';
@@ -16,14 +16,44 @@ import { Card } from "@/components/ui/card";
 export function InstitutionDepartments() {
     const { subjects, classTeachers, allStaffMembers, allClasses } = useInstitution();
     const [viewMode, setViewMode] = useState<string>('subjects'); // 'subjects' | 'classes'
-    const [selectedSubject, setSelectedSubject] = useState<string>('');
+    const [selectedSubjectName, setSelectedSubjectName] = useState<string>('');
 
-    // Select first subject by default if not selected
-    if (!selectedSubject && subjects.length > 0) {
-        setSelectedSubject(subjects[0].id);
+    // Unique subject names
+    const uniqueSubjectNames = useMemo(() => {
+        const names = subjects.map(s => s.name);
+        return Array.from(new Set(names)).sort();
+    }, [subjects]);
+
+    // Select first subject name by default if not selected
+    if (!selectedSubjectName && uniqueSubjectNames.length > 0) {
+        setSelectedSubjectName(uniqueSubjectNames[0]);
     }
 
-    const currentSubjectData = subjects.find(s => s.id === selectedSubject);
+    // Aggregate staff for the selected subject name
+    const aggregatedStaff = useMemo(() => {
+        if (!selectedSubjectName) return [];
+
+        const staffMap: Record<string, { id: string; name: string; classes: string[] }> = {};
+        
+        // Find all subjects that match this name
+        const matchingSubjects = subjects.filter(s => s.name === selectedSubjectName);
+        
+        matchingSubjects.forEach(sub => {
+            sub.staff.forEach(staff => {
+                if (!staffMap[staff.id]) {
+                    staffMap[staff.id] = { id: staff.id, name: staff.name, classes: [] };
+                }
+                // Merge classes ensuring uniqueness
+                staff.classes.forEach(cls => {
+                    if (!staffMap[staff.id].classes.includes(cls)) {
+                        staffMap[staff.id].classes.push(cls);
+                    }
+                });
+            });
+        });
+
+        return Object.values(staffMap).sort((a, b) => a.name.localeCompare(b.name));
+    }, [selectedSubjectName, subjects]);
 
     // Derived list of class teachers
     const classTeacherList = [];
@@ -58,7 +88,7 @@ export function InstitutionDepartments() {
             {/* Toggle View Mode */}
             <div className="mb-6">
                 <Tabs value={viewMode} onValueChange={setViewMode} className="w-[400px]">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="subjects" className="flex items-center gap-2">
                             <BookOpen className="w-4 h-4" />
                             By Subject
@@ -78,14 +108,14 @@ export function InstitutionDepartments() {
                     {/* Subject Selector */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium mb-2">Select Subject</label>
-                        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                            <SelectTrigger className="w-full max-w-md">
+                        <Select value={selectedSubjectName} onValueChange={setSelectedSubjectName}>
+                            <SelectTrigger className="w-full max-w-md h-12 border-primary/30 bg-background shadow-sm hover:border-primary transition-all font-medium text-base">
                                 <SelectValue placeholder="Choose a subject" />
                             </SelectTrigger>
                             <SelectContent>
-                                {subjects.map((subject) => (
-                                    <SelectItem key={subject.id} value={subject.id}>
-                                        {subject.name}
+                                {uniqueSubjectNames.map((name) => (
+                                    <SelectItem key={name} value={name}>
+                                        {name}
                                     </SelectItem>
                                 ))}
                             </SelectContent>
@@ -93,18 +123,18 @@ export function InstitutionDepartments() {
                     </div>
 
                     {/* Staff Cards for Selected Subject */}
-                    {currentSubjectData && (
+                    {selectedSubjectName && (
                         <div>
                             <div className="flex items-center gap-2 mb-4">
                                 <BookOpen className="w-5 h-5 text-institution" />
-                                <h2 className="text-lg font-semibold">{currentSubjectData.name} Teachers</h2>
+                                <h2 className="text-lg font-semibold">{selectedSubjectName} Teachers</h2>
                                 <span className="text-sm text-muted-foreground ml-2">
-                                    ({currentSubjectData.staff.length} staff members)
+                                    ({aggregatedStaff.length} staff members)
                                 </span>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {currentSubjectData.staff.map((staffMember) => (
+                                {aggregatedStaff.map((staffMember) => (
                                     <div
                                         key={staffMember.id}
                                         className="dashboard-card p-5 hover:shadow-lg transition-shadow"
@@ -118,7 +148,7 @@ export function InstitutionDepartments() {
                                                     {staffMember.name}
                                                 </h3>
                                                 <p className="text-sm text-muted-foreground">
-                                                    {currentSubjectData.name} Teacher
+                                                    {selectedSubjectName} Teacher
                                                 </p>
                                             </div>
                                         </div>
@@ -152,7 +182,7 @@ export function InstitutionDepartments() {
                     {/* Department Selector */}
                     <div className="mb-6">
                         <label className="block text-sm font-medium mb-2">Select Department</label>
-                        <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                        <Select value={selectedSubjectName} onValueChange={setSelectedSubjectName}>
                             <SelectTrigger className="w-full max-w-md">
                                 <SelectValue placeholder="Choose a department" />
                             </SelectTrigger>
@@ -167,15 +197,15 @@ export function InstitutionDepartments() {
                         </Select>
                     </div>
 
-                    {selectedSubject && (
+                    {selectedSubjectName && (
                         <div>
                             <div className="flex items-center gap-2 mb-4">
                                 <LayoutGrid className="w-5 h-5 text-purple-600" />
-                                <h2 className="text-lg font-semibold">{selectedSubject} Department</h2>
+                                <h2 className="text-lg font-semibold">{selectedSubjectName} Department</h2>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {allStaffMembers.filter(s => s.department === selectedSubject).map(staff => {
+                                {allStaffMembers.filter(s => s.department === selectedSubjectName).map(staff => {
                                     // Calculate assignments for this staff
                                     // We need to aggregate from 'subjects' (context props) or recreate logic.
                                     // 'subjects' const in this file comes from context, which returns Subject[]

@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, isSupabaseConfigured, testSupabaseConnection, setActiveAccount, capacitorStorage } from '@/lib/supabase';
 import { Preferences } from '@capacitor/preferences';
 import { toast } from 'sonner';
-import { SplashScreen } from '@capacitor/splash-screen';
 import { initializePushNotifications, removePushToken } from '@/services/pushNotification.service';
 
 interface AuthStateWithAccounts extends AuthState {
@@ -438,15 +437,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setState({ user: null, accounts, activeAccountId: activeId, isAuthenticated: false, isLoading: false });
         }
 
-        // Hide splash screen after initial session check
-        setTimeout(async () => {
-          try {
-            await SplashScreen.hide();
-            console.log('[AUTH] Splash screen hidden after auth check');
-          } catch (error) {
-            console.log('[AUTH] Splash screen already hidden or not available');
-          }
-        }, 300);
+
         isInitialLoad = false;
       } catch (error) {
         console.error('[AUTH] Fatal error during session init:', error);

@@ -25,7 +25,7 @@ type ClassTeacherMap = Record<string, Record<string, string>>;
 
 export interface InstitutionContextType {
     subjects: Subject[];
-    allSubjects: { id: string; name: string; code?: string; department?: string }[];
+    allSubjects: { id: string; name: string; code?: string; department?: string; class_name?: string }[];
     allStaffMembers: { id: string; name: string; department?: string }[];
     allClasses: { id: string; name: string; section: string }[];
 
@@ -48,7 +48,7 @@ export function InstitutionProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
     const [assignments, setAssignments] = useState<AssignmentsMap>({});
     const [classTeachers, setClassTeachers] = useState<ClassTeacherMap>({});
-    const [allSubjectsList, setAllSubjectsList] = useState<{ id: string; name: string; code?: string; department?: string }[]>([]);
+    const [allSubjectsList, setAllSubjectsList] = useState<{ id: string; name: string; code?: string; department?: string; class_name?: string }[]>([]);
     const [allStaffMembers, setAllStaffMembers] = useState<{ id: string; name: string; department?: string }[]>([]);
     const [allClasses, setAllClasses] = useState<{ id: string; name: string; section: string }[]>([]);
     const [loading, setLoading] = useState(true);

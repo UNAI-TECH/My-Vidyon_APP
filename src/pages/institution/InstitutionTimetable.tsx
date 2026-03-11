@@ -1330,27 +1330,6 @@ export function InstitutionTimetable() {
                                 </div>
                             </div>
 
-                            {/* Subject */}
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium">Subject</label>
-                                <Select
-                                    value={editingSlot.data.subject_id || 'none'}
-                                    onValueChange={(v) => updateEditingSlot('subject_id', v === 'none' ? null : v)}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select subject" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">No Subject (Free Period)</SelectItem>
-                                        {subjects.map((s: any) => (
-                                            <SelectItem key={s.id} value={String(s.id)}>
-                                                {s.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
                             {/* Class and Section - Filtered by faculty assignments */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
@@ -1360,6 +1339,7 @@ export function InstitutionTimetable() {
                                         onValueChange={(v) => {
                                             updateEditingSlot('class_id', v === 'none' ? null : v);
                                             updateEditingSlot('section', ''); // Reset section when class changes
+                                            updateEditingSlot('subject_id', null); // Reset subject when class changes
                                         }}
                                     >
                                         <SelectTrigger>
@@ -1369,21 +1349,11 @@ export function InstitutionTimetable() {
                                             <SelectItem value="none">Select a class</SelectItem>
                                             {uniqueClasses
                                                 .filter((c: any) => {
-                                                    // If subject is selected, only show classes assigned to faculty for this subject
-                                                    if (editingSlot.data.subject_id) {
-                                                        const sid = editingSlot.data.subject_id;
-                                                        const selectedSubject = subjects.find((s: any) => String(s.id) === String(sid));
-                                                        const sname = selectedSubject?.name;
-
-                                                        // Match class assigned to this faculty for this subject
-                                                        return facultyAssignments.some((a: any) => {
-                                                            const isSubjectMatch = String(a.subject_id) === String(sid) || (sname && a.subjects?.name === sname);
-                                                            // Match by class_id OR class_name from subjects table (per user schema)
-                                                            const isClassMatch = String(a.class_id) === String(c.id) || (c.name && a.subjects?.class_name === c.name);
-                                                            return isSubjectMatch && isClassMatch;
-                                                        });
-                                                    }
-                                                    return true; // If no subject, show all classes
+                                                    // Filter classes assigned to this faculty
+                                                    return facultyAssignments.some((a: any) => 
+                                                        String(a.class_id) === String(c.id) || 
+                                                        (a.subjects?.class_name === c.name)
+                                                    );
                                                 })
                                                 .map((c: any) => (
                                                     <SelectItem key={c.id} value={String(c.id)}>
@@ -1398,41 +1368,65 @@ export function InstitutionTimetable() {
                                     <label className="text-sm font-medium">Section</label>
                                     <Select
                                         value={editingSlot.data.section || 'none'}
-                                        onValueChange={(v) => updateEditingSlot('section', v === 'none' ? '' : v)}
+                                        onValueChange={(v) => {
+                                            updateEditingSlot('section', v === 'none' ? '' : v);
+                                            updateEditingSlot('subject_id', null); // Reset subject when section changes
+                                        }}
+                                        disabled={!editingSlot.data.class_id || editingSlot.data.class_id === 'none'}
                                     >
                                         <SelectTrigger>
                                             <SelectValue placeholder="Select section" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectItem value="none">Select section</SelectItem>
-                                            {(editingSlot.data.class_id && editingSlot.data.subject_id) ? (
-                                                // Filter sections by faculty assignments for this class and subject
-                                                (() => {
-                                                    const sid = editingSlot.data.subject_id;
-                                                    const cid = editingSlot.data.class_id;
-                                                    const selectedSubject = subjects.find((s: any) => String(s.id) === String(sid));
-                                                    const sname = selectedSubject?.name;
-                                                    const selectedClass = uniqueClasses.find((cl: any) => String(cl.id) === String(cid));
-                                                    const cname = selectedClass?.name;
-
-                                                    return facultyAssignments
-                                                        .filter((a: any) => {
-                                                            const isSubjectMatch = String(a.subject_id) === String(sid) || (sname && a.subjects?.name === sname);
-                                                            const isClassMatch = String(a.class_id) === String(cid) || (cname && a.subjects?.class_name === cname);
-                                                            return isSubjectMatch && isClassMatch;
-                                                        })
-                                                        .map((a: any) => (
-                                                            <SelectItem key={String(a.section)} value={String(a.section)}>{String(a.section)}</SelectItem>
-                                                        ));
-                                                })()
-                                            ) : (
-                                                ['A', 'B', 'C', 'D'].map((sec) => (
-                                                    <SelectItem key={sec} value={sec}>{sec}</SelectItem>
-                                                ))
+                                            {editingSlot.data.class_id && (
+                                                facultyAssignments
+                                                    .filter((a: any) => {
+                                                        const selectedClass = uniqueClasses.find((cl: any) => String(cl.id) === String(editingSlot.data.class_id));
+                                                        return String(a.class_id) === String(editingSlot.data.class_id) || 
+                                                               (selectedClass && a.subjects?.class_name === selectedClass.name);
+                                                    })
+                                                    .map((a: any, idx: number) => (
+                                                        <SelectItem key={`${a.section}-${idx}`} value={String(a.section)}>{String(a.section)}</SelectItem>
+                                                    ))
+                                                    // Ensure unique sections
+                                                    .filter((item, pos, self) => self.findIndex(s => s.props.value === item.props.value) === pos)
                                             )}
                                         </SelectContent>
                                     </Select>
                                 </div>
+                            </div>
+
+                            {/* Subject - Dependent on Class and Section */}
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Subject</label>
+                                <Select
+                                    value={editingSlot.data.subject_id || 'none'}
+                                    onValueChange={(v) => updateEditingSlot('subject_id', v === 'none' ? null : v)}
+                                    disabled={!editingSlot.data.section}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue placeholder={!editingSlot.data.section ? "Select Class & Section first" : "Select subject"} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">No Subject (Free Period)</SelectItem>
+                                        {editingSlot.data.class_id && editingSlot.data.section && (
+                                            facultyAssignments
+                                                .filter((a: any) => {
+                                                    const selectedClass = uniqueClasses.find((cl: any) => String(cl.id) === String(editingSlot.data.class_id));
+                                                    const isClassMatch = String(a.class_id) === String(editingSlot.data.class_id) || 
+                                                                       (selectedClass && a.subjects?.class_name === selectedClass.name);
+                                                    const isSectionMatch = String(a.section) === String(editingSlot.data.section);
+                                                    return isClassMatch && isSectionMatch;
+                                                })
+                                                .map((a: any) => (
+                                                    <SelectItem key={a.subject_id} value={String(a.subject_id)}>
+                                                        {a.subjects?.name}
+                                                    </SelectItem>
+                                                ))
+                                        )}
+                                    </SelectContent>
+                                </Select>
                             </div>
 
                             {/* Room Number */}

@@ -28,7 +28,6 @@ export function InstitutionLayout({ children }: { children: ReactNode }) {
   const institutionNavItems = [
     { label: t.nav.dashboard, href: '/institution', icon: LayoutDashboard },
     { label: t.nav.departments, href: '/institution/departments', icon: Building2 },
-    { label: t.nav.courses, href: '/institution/courses', icon: BookOpen },
     { label: 'Users', href: '/institution/users', icon: Users },
     { label: t.nav.calendar, href: '/institution/calendar', icon: Calendar },
     { label: 'Faculty Assigning', href: '/institution/faculty-assigning', icon: UserCheck },

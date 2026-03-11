@@ -85,7 +85,16 @@ function AssignmentDialog({
         return allStaffMembers.filter((s: any) => !assignedElsewhere.has(s.id));
     }, [allStaffMembers, classTeachers, classSection]);
 
-    // Load initial data for ALL subjects when dialog opens
+    // Load initial data for subjects for this class when dialog opens
+    const subjectsForClass = useMemo(() => {
+        if (!classSection) return allSubjects;
+        const filtered = allSubjects.filter((s: any) =>
+            s.class_name && s.class_name.toLowerCase() === classSection.name.toLowerCase()
+        );
+        // Fallback to all subjects if none match (e.g. subjects without class_name set)
+        return filtered.length > 0 ? filtered : allSubjects;
+    }, [allSubjects, classSection]);
+
     useMemo(() => {
         if (open && classSection) {
             const ctId = getClassTeacher(classSection.id, classSection.section);
@@ -93,7 +102,7 @@ function AssignmentDialog({
 
             const initialMap: Record<string, StaffAssignment[]> = {};
             // Pre-load subjects that already have staff
-            allSubjects.forEach((sub: any) => {
+            subjectsForClass.forEach((sub: any) => {
                 const assigned = getAssignedStaff(classSection.id, classSection.section, sub.id);
                 if (assigned.length > 0) {
                     initialMap[sub.id] = assigned.map((s: any) => ({
@@ -105,7 +114,7 @@ function AssignmentDialog({
             });
             setSubjectAssignments(initialMap);
         }
-    }, [open, classSection, getClassTeacher, allSubjects]);
+    }, [open, classSection, getClassTeacher, subjectsForClass]);
 
     const handleAddSubject = (subjectId: string) => {
         if (!subjectId || subjectId === 'placeholder') return;
@@ -159,7 +168,7 @@ function AssignmentDialog({
 
             // 2. Save ALL subject assignments
             // We loop through all subjects to ensure deleted subjects are also wiped
-            const promises = allSubjects.map(async (sub: any) => {
+            const promises = subjectsForClass.map(async (sub: any) => {
                 const staffList = subjectAssignments[sub.id] || [];
                 const ids = staffList.map(s => s.staffId).filter(Boolean);
 
@@ -281,7 +290,7 @@ function AssignmentDialog({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="placeholder" disabled>Choose a subject</SelectItem>
-                                        {allSubjects.map((sub: any) => (
+                                        {subjectsForClass.map((sub: any) => (
                                             <SelectItem key={sub.id} value={sub.id} disabled={!!subjectAssignments[sub.id]}>
                                                 {sub.name} {subjectAssignments[sub.id] ? '(Added)' : ''}
                                             </SelectItem>
@@ -300,7 +309,7 @@ function AssignmentDialog({
                         ) : (
                             <div className="grid grid-cols-1 gap-4 overflow-hidden">
                                 {Object.entries(subjectAssignments).map(([subId, staff]) => {
-                                    const subject = allSubjects.find((s: any) => s.id === subId);
+                                    const subject = subjectsForClass.find((s: any) => s.id === subId);
                                     return (
                                         <div key={subId} className="group overflow-hidden rounded-xl border bg-card transition-all hover:border-primary/30 shadow-sm">
                                             <div className="px-4 py-3 bg-muted/30 border-b flex items-center justify-between">
@@ -515,32 +524,44 @@ export function InstitutionFacultyAssigning() {
 
                                                         {/* Subject Summary */}
                                                         <div className="space-y-2">
-                                                            <div className="flex items-center justify-between">
-                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 opacity-70">
-                                                                    <BookOpen className="w-3 h-3" /> Subject Staff
-                                                                </span>
-                                                                <span className="text-[9px] font-bold text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded-full">
-                                                                    {allSubjects.filter(s => getAssignedStaff(cls.id, cls.section, s.id).length > 0).length} Assigned
-                                                                </span>
-                                                            </div>
-                                                            <div className="flex flex-wrap gap-1.5">
-                                                                {allSubjects.slice(0, 3).map(sub => {
-                                                                    const assigned = getAssignedStaff(cls.id, cls.section, sub.id);
-                                                                    if (assigned.length === 0) return null;
-                                                                    return (
-                                                                        <div key={sub.id} className="px-2 py-1 rounded-lg bg-background border text-[10px] shadow-sm flex items-center gap-1 group/chip hover:border-primary/30 transition-colors">
-                                                                            <span className="font-bold text-primary/60">{sub.name.substring(0, 3)}:</span>
-                                                                            <span className="font-medium">{assigned[0].name.split(' ')[0]}</span>
-                                                                            {assigned.length > 1 && <span className="text-primary/40">+{assigned.length - 1}</span>}
+                                                            {(() => {
+                                                                const subjectsForThisClass = allSubjects.filter(s => 
+                                                                    s.class_name && s.class_name.toLowerCase() === cls.name.toLowerCase()
+                                                                );
+                                                                const assignedSubjects = subjectsForThisClass.filter(s => 
+                                                                    getAssignedStaff(cls.id, cls.section, s.id).length > 0
+                                                                );
+                                                                
+                                                                return (
+                                                                    <>
+                                                                        <div className="flex items-center justify-between">
+                                                                            <span className="text-[10px] font-bold text-muted-foreground uppercase flex items-center gap-1.5 opacity-70">
+                                                                                <BookOpen className="w-3 h-3" /> Subject Staff
+                                                                            </span>
+                                                                            <span className="text-[9px] font-bold text-primary/60 bg-primary/5 px-1.5 py-0.5 rounded-full">
+                                                                                {assignedSubjects.length} Assigned
+                                                                            </span>
                                                                         </div>
-                                                                    );
-                                                                })}
-                                                                {allSubjects.filter(s => getAssignedStaff(cls.id, cls.section, s.id).length > 0).length > 3 && (
-                                                                    <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
-                                                                        +{allSubjects.filter(s => getAssignedStaff(cls.id, cls.section, s.id).length > 0).length - 3}
-                                                                    </div>
-                                                                )}
-                                                            </div>
+                                                                        <div className="flex flex-wrap gap-1.5">
+                                                                            {assignedSubjects.slice(0, 3).map(sub => {
+                                                                                const assigned = getAssignedStaff(cls.id, cls.section, sub.id);
+                                                                                return (
+                                                                                    <div key={sub.id} className="px-2 py-1 rounded-lg bg-background border text-[10px] shadow-sm flex items-center gap-1 group/chip hover:border-primary/30 transition-colors">
+                                                                                        <span className="font-bold text-primary/60">{sub.name.substring(0, 3)}:</span>
+                                                                                        <span className="font-medium">{assigned[0].name.split(' ')[0]}</span>
+                                                                                        {assigned.length > 1 && <span className="text-primary/40">+{assigned.length - 1}</span>}
+                                                                                    </div>
+                                                                                );
+                                                                            })}
+                                                                            {assignedSubjects.length > 3 && (
+                                                                                <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground">
+                                                                                    +{assignedSubjects.length - 3}
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    </>
+                                                                );
+                                                            })()}
                                                         </div>
                                                     </div>
                                                 </div>

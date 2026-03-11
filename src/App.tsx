@@ -66,7 +66,7 @@ import { FacultyScanAttendance } from "./pages/faculty/FacultyScanAttendance";
 // Institution Pages
 import { InstitutionDashboard } from "./pages/institution/InstitutionDashboard";
 import { InstitutionDepartments } from "./pages/institution/InstitutionDepartments";
-import { InstitutionCourses } from "./pages/institution/InstitutionCourses";
+// import { InstitutionCourses } from "./pages/institution/InstitutionCourses"; // Removed
 // import { InstitutionFaculty } from "./pages/institution/InstitutionFaculty"; // Removed
 import { InstitutionCalendar } from "./pages/institution/InstitutionCalendar";
 import { InstitutionLeaveApproval } from "./pages/institution/InstitutionLeaveApproval";
@@ -193,7 +193,7 @@ const App = () => {
                       <Route path="/accountant/dashboard" element={<ProtectedRoute allowedRoles={['accountant']}><AccountantDashboard /></ProtectedRoute>} />
 
                       <Route path="/institution/departments" element={<ProtectedRoute allowedRoles={['institution']}><InstitutionDepartments /></ProtectedRoute>} />
-                      <Route path="/institution/courses" element={<ProtectedRoute allowedRoles={['institution']}><InstitutionCourses /></ProtectedRoute>} />
+                      {/* <Route path="/institution/courses" element={<ProtectedRoute allowedRoles={['institution']}><InstitutionCourses /></ProtectedRoute>} /> */}
                       {/* <Route path="/institution/faculty" element={<ProtectedRoute allowedRoles={['institution']}><InstitutionFaculty /></ProtectedRoute>} /> */}
                       <Route path="/institution/faculty-assigning" element={<ProtectedRoute allowedRoles={['institution']}><InstitutionFacultyAssigning /></ProtectedRoute>} />
                       <Route path="/institution/calendar" element={<ProtectedRoute allowedRoles={['institution']}><InstitutionCalendar /></ProtectedRoute>} />
