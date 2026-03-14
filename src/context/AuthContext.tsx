@@ -36,83 +36,174 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('[AUTH] Verifying role for:', email);
       console.log('[AUTH] Starting profile fetch at:', new Date().toISOString());
 
-      //  30-second timeout for profile fetch (increased for slower connections)
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => {
+      let timeoutId: any;
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
           console.error('[AUTH] ⏱️ Profile fetch timed out after 30 seconds - database is not responding');
           reject(new Error('Profile fetch timed out after 30 seconds. Please check your network connection.'));
-        }, 30000)
-      );
+        }, 30000);
+      });
 
       const profileFetchPromise = (async () => {
-        let detectedRole: UserRole | null = null;
-        let institutionId: string | undefined = undefined;
+        try {
+          let detectedRole: UserRole | null = null;
+          let institutionId: string | undefined = undefined;
 
-        // 1. Fetch profile with institution data in one query
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, role, institution_id, status, phone')
-          .eq('id', userId)
-          .maybeSingle();
+          // 1. Fetch profile with institution data in one query
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id, email, full_name, role, institution_id, status, phone')
+            .eq('id', userId)
+            .maybeSingle();
 
-        // If Super Admin, return immediately
-        if (profile?.role === 'admin') {
-          return {
-            id: userId,
-            email: email,
-            name: profile.full_name || email.split('@')[0],
-            role: 'admin' as UserRole,
-            institutionId: profile.institution_id,
-            forcePasswordChange: false
-          };
-        }
-
-        // Check if profile is active
-        if (profile?.status === 'inactive') {
-          console.error('🚫 [AUTH] BLOCKING LOGIN - Profile is disabled');
-          throw new Error('USER_DISABLED');
-        }
-
-        // 2. Role detection logic
-        if (profile?.role) {
-          // If we have a role in the profile, use it immediately
-          detectedRole = profile.role as UserRole;
-          institutionId = profile.institution_id;
-          console.log('[AUTH] Role found in profile:', detectedRole);
-        } else {
-          // Fallback: Parallel queries for role detection if profile role is missing
-          console.log('[AUTH] Role missing from profile, running fallback queries...');
-          const [instRes, studentRes, parentRes, staffRes, accountantRes] = await Promise.all([
-            supabase.from('institutions').select('institution_id').eq('admin_email', email).maybeSingle(),
-            supabase.from('students').select('institution_id, address').eq('email', email).maybeSingle(),
-            supabase.from('parents').select('institution_id, phone').eq('email', email).maybeSingle(),
-            supabase.from('staff_details').select('institution_id, role').eq('profile_id', userId).maybeSingle(),
-            supabase.from('accountants').select('institution_id').eq('profile_id', userId).maybeSingle()
-          ]);
-
-          // Check Institution Admin
-          if (instRes.data) {
-            detectedRole = 'institution';
-            institutionId = instRes.data.institution_id;
+          // If Super Admin, return immediately
+          if (profile?.role === 'admin') {
+            return {
+              id: userId,
+              email: email,
+              name: profile.full_name || email.split('@')[0],
+              role: 'admin' as UserRole,
+              institutionId: profile.institution_id,
+              forcePasswordChange: false
+            };
           }
 
-          // Check Student
-          if (!detectedRole && studentRes.data) {
-            detectedRole = 'student';
-            institutionId = studentRes.data.institution_id;
+          // Check if profile is active
+          if (profile?.status === 'inactive') {
+            console.error('🚫 [AUTH] BLOCKING LOGIN - Profile is disabled');
+            throw new Error('USER_DISABLED');
           }
 
-          // Check Parent
-          if (!detectedRole && parentRes.data) {
-            detectedRole = 'parent';
-            institutionId = parentRes.data.institution_id;
+          // 2. Role detection logic
+          if (profile?.role) {
+            // If we have a role in the profile, use it immediately
+            detectedRole = profile.role as UserRole;
+            institutionId = profile.institution_id;
+            console.log('[AUTH] Role found in profile:', detectedRole);
+          } else {
+            // Fallback: Parallel queries for role detection if profile role is missing
+            console.log('[AUTH] Role missing from profile, running fallback queries...');
+            const [instRes, studentRes, parentRes, staffRes, accountantRes] = await Promise.all([
+              supabase.from('institutions').select('institution_id').eq('admin_email', email).maybeSingle(),
+              supabase.from('students').select('institution_id, address').eq('email', email).maybeSingle(),
+              supabase.from('parents').select('institution_id, phone').eq('email', email).maybeSingle(),
+              supabase.from('staff_details').select('institution_id, role').eq('profile_id', userId).maybeSingle(),
+              supabase.from('accountants').select('institution_id').eq('profile_id', userId).maybeSingle()
+            ]);
+
+            if (instRes.data) { detectedRole = 'institution'; institutionId = instRes.data.institution_id; }
+            else if (studentRes.data) { detectedRole = 'student'; institutionId = studentRes.data.institution_id; }
+            else if (parentRes.data) { detectedRole = 'parent'; institutionId = parentRes.data.institution_id; }
+            else if (staffRes.data) { detectedRole = staffRes.data.role as UserRole || 'faculty'; institutionId = staffRes.data.institution_id; }
+            else if (accountantRes.data) { detectedRole = 'accountant'; institutionId = accountantRes.data.institution_id; }
+          }
+
+          if (!detectedRole) {
+            console.error('🚫 [AUTH] Role could not be detected for:', email);
+            throw new Error('ROLE_NOT_FOUND');
+          }
+
+          // 3. Sync data if we found it elsewhere
+          if (detectedRole && institutionId && (!profile?.role || !profile?.institution_id)) {
+            await supabase.from('profiles').upsert({
+              id: userId,
+              email: email,
+              role: detectedRole,
+              institution_id: institutionId,
+              full_name: profile?.full_name || email.split('@')[0]
+            }, { onConflict: 'id' });
+          }
+
+          // 4. Resolve more details once role is known
+          let institutionName = 'My Vidyon';
+          let institutionCode = institutionId || '';
+          let extraDetails: any = {};
+          
+          if (institutionId) {
+            const { data: inst } = await supabase
+              .from('institutions')
+              .select('id, name, institution_id')
+              .eq('institution_id', institutionId)
+              .maybeSingle();
+            if (inst) {
+              institutionName = inst.name;
+              institutionCode = inst.institution_id;
+              extraDetails.institutionUuid = inst.id;
+              console.log('[AUTH] Resolved institution UUID:', inst.id, 'for code:', institutionId);
+            }
+          }
+
+          let staffId = undefined;
+          let staffImage = undefined;
+          if (detectedRole !== 'student' && detectedRole !== 'parent' && detectedRole !== 'admin') {
+            // Fetch basic staff info
+            const { data: staff } = await supabase
+              .from('staff_details')
+              .select('staff_id, image_url, class_assigned, section_assigned')
+              .eq('profile_id', userId)
+              .maybeSingle();
+            
+            if (staff) {
+              staffId = staff.staff_id;
+              staffImage = (staff as any).image_url;
+              extraDetails.className = (staff as any).class_assigned;
+              extraDetails.section = (staff as any).section_assigned;
+            }
+
+            // If assignments are NULL in staff_details (common), fetch from faculty_subjects
+            if (!extraDetails.className) {
+              console.log('[AUTH] class_assigned is NULL in staff_details, checking faculty_subjects for profile:', userId);
+              
+              // 1. Fetch raw rows (no join) to confirm data exists and is readable
+              const { data: rawRows, error: rawError } = await supabase
+                  .from('faculty_subjects')
+                  .select('class_id, section, assignment_type')
+                  .eq('faculty_profile_id', userId);
+              
+              if (rawError) console.error('[AUTH] Raw assignments fetch error:', rawError);
+
+              if (rawRows && rawRows.length > 0) {
+                  console.log('[AUTH] Found raw assignments:', rawRows.length);
+                  
+                  // Priority to 'class_teacher' assignment
+                  const bestMatchRaw = rawRows.length === 1 
+                      ? rawRows[0] 
+                      : (rawRows.find(a => a.assignment_type === 'class_teacher') || rawRows[0]);
+                  
+                  if (bestMatchRaw.class_id) {
+                      // 2. Fetch class name separately
+                      const { data: clsData } = await supabase
+                          .from('classes')
+                          .select('name')
+                          .eq('id', bestMatchRaw.class_id)
+                          .maybeSingle();
+
+                      if (clsData) {
+                          extraDetails.className = clsData.name;
+                          extraDetails.section = bestMatchRaw.section;
+                          console.log('[AUTH] Successfully resolved assignment Name:', clsData.name, bestMatchRaw.section);
+                      }
+                  }
+              }
+            }
+          }
+
+          if (detectedRole === 'student') {
+            const { data: student } = await supabase
+              .from('students')
+              .select('register_number, class_name, section, image_url')
+              .eq('email', email)
+              .maybeSingle();
+            
+            if (student) {
+              extraDetails = { ...extraDetails, studentId: student.register_number, className: student.class_name, section: student.section, imageUrl: student.image_url };
+            }
           }
 
           // --- PARENT AUTO-SYNC & LINKING ---
           if (detectedRole === 'parent' && institutionId) {
             console.log('[AUTH] Syncing parent record and seeking children...');
             try {
-              // 1. Ensure parent record exists in public.parents mapped to profile_id
               const { data: parentRecord, error: parentError } = await supabase
                 .from('parents')
                 .upsert({
@@ -125,8 +216,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 .single();
 
               if (!parentError && parentRecord) {
-                // 2. Try to link students who have this parent's email as parent_email 
-                // but aren't linked in student_parents yet
                 const { data: unlinkedChildren } = await supabase
                   .from('students')
                   .select('id')
@@ -137,8 +226,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     student_id: child.id,
                     parent_id: parentRecord.id
                   }));
-
-                  // Upsert to avoid duplicate key errors if already linked
                   await supabase.from('student_parents').upsert(linkEntries, { onConflict: 'student_id,parent_id' });
                   console.log(`[AUTH] Auto-linked ${unlinkedChildren.length} children to parent ${email}`);
                 }
@@ -147,127 +234,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               console.warn('[AUTH] Parent sync-linking failed:', err);
             }
           }
-          // ---------------------------------
 
-          // Check Staff/Faculty (StaffDetails might have different role field)
-          if (!detectedRole && staffRes.data) {
-            detectedRole = staffRes.data.role as UserRole;
-            institutionId = staffRes.data.institution_id;
-          }
-
-          // Check Accountant
-          if (!detectedRole && accountantRes.data) {
-            detectedRole = 'accountant';
-            institutionId = accountantRes.data.institution_id;
-          }
-
-          if (!detectedRole) {
-            // Last resort: check profiles again but more loosely
-            if (institutionId) {
-              detectedRole = 'student'; // Default to student if institution found but role not
-            } else {
-              console.error('No role detected for user');
-              return null;
-            }
-          }
-
-          // --- SYNC LOGIC: Update profiles table if data was missing ---
-          if (detectedRole && institutionId) {
-            console.log('[AUTH] Syncing profile table with detected data...');
-            const syncData = {
-              id: userId,
-              email: email,
-              role: detectedRole,
-              institution_id: institutionId,
-              full_name: profile?.full_name || email.split('@')[0]
-            };
-
-            // Use upsert to handle both missing rows and missing data in existing rows
-            const { error: syncError } = await supabase.from('profiles').upsert(syncData, { onConflict: 'id' });
-            if (syncError) {
-              console.warn('[AUTH] Profile sync failed:', syncError.message);
-            }
-          }
+          return {
+            id: userId,
+            email: email,
+            name: profile?.full_name || email.split('@')[0],
+            role: detectedRole,
+            avatar: extraDetails.imageUrl || staffImage,
+            institutionId: institutionId,
+            institutionUuid: extraDetails.institutionUuid,
+            institutionName,
+            institutionCode,
+            studentId: extraDetails.studentId,
+            staffId: staffId,
+            className: extraDetails.className,
+            section: extraDetails.section,
+            academicYear: '2025-26', // TODO: Fetch from settings
+            forcePasswordChange: false,
+            phone: profile?.phone,
+            address: undefined
+          };
+        } finally {
+          clearTimeout(timeoutId);
         }
-
-        // 2b. If institutionId is still missing, try to find it from any associated table
-        if (!institutionId) {
-          const [s, p, st] = await Promise.all([
-            supabase.from('students').select('institution_id').eq('email', email).maybeSingle(),
-            supabase.from('parents').select('institution_id').eq('email', email).maybeSingle(),
-            supabase.from('staff_details').select('institution_id, role').eq('profile_id', userId).maybeSingle()
-          ]);
-          institutionId = s.data?.institution_id || p.data?.institution_id || st.data?.institution_id;
-        }
-
-        // 5. Fetch additional details for card (Institution info, Class, Section, Student ID, Photo)
-        let institutionName = 'Unknown Institution';
-        let institutionCode = institutionId || 'N/A';
-        let extraDetails: any = {};
-
-        // 2c. Fetch Staff Details if needed
-        let staffId = undefined;
-        let staffImage = undefined;
-        if (detectedRole !== 'student' && detectedRole !== 'parent' && detectedRole !== 'admin') {
-          const { data: staff } = await supabase
-            .from('staff_details')
-            .select('staff_id, image_url, class_assigned, section_assigned')
-            .eq('profile_id', userId)
-            .maybeSingle();
-          if (staff) {
-            staffId = staff.staff_id;
-            staffImage = (staff as any).image_url;
-            extraDetails.className = (staff as any).class_assigned;
-            extraDetails.section = (staff as any).section_assigned;
-          }
-        }
-
-        if (institutionId) {
-          const { data: inst } = await supabase
-            .from('institutions')
-            .select('name, institution_id')
-            .eq('institution_id', institutionId)
-            .maybeSingle();
-          if (inst) {
-            institutionName = inst.name;
-            institutionCode = inst.institution_id;
-          }
-        }
-
-        if (detectedRole === 'student') {
-          const { data: student } = await supabase
-            .from('students')
-            .select('register_number, class_name, section, image_url')
-            .eq('id', userId)
-            .maybeSingle();
-          if (student) {
-            extraDetails = {
-              studentId: student.register_number,
-              className: student.class_name,
-              section: student.section,
-              imageUrl: student.image_url
-            };
-          }
-        }
-
-        return {
-          id: userId,
-          email: email,
-          name: profile?.full_name || email.split('@')[0],
-          role: detectedRole,
-          avatar: extraDetails.imageUrl || staffImage,
-          institutionId: institutionId,
-          institutionName,
-          institutionCode,
-          studentId: extraDetails.studentId,
-          staffId: staffId,
-          className: extraDetails.className,
-          section: extraDetails.section,
-          academicYear: '2025-26', // TODO: Fetch from settings
-          forcePasswordChange: false,
-          phone: profile?.phone,
-          address: undefined
-        };
       })();
 
       // Race between profile fetch and 30s timeout
@@ -277,17 +266,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (err: any) {
       console.error('Profile fetch error:', err);
       if (err.message === 'INSTITUTION_INACTIVE' || err.message === 'INSTITUTION_DELETED' || err.message === 'USER_DISABLED') {
-        throw err; // Re-throw blocking errors
+        throw err;
       }
-
-      // If it's a network timeout or connection error, don't return null (which triggers logout)
-      // instead, throw a specific TRANSIENT_ERROR so caller knows not to clear session
       const errorMsg = err.message || '';
       if (errorMsg.includes('timeout') || errorMsg.includes('fetch') || errorMsg.includes('Network')) {
-        console.warn('⚠️ [AUTH] Network error during profile fetch - holding session');
         throw new Error('TRANSIENT_NETWORK_ERROR');
       }
-
       return null;
     }
   }, []);

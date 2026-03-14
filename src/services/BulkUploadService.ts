@@ -61,6 +61,7 @@ export class BulkUploadService {
     static async bulkCreateUsers(users: BulkUploadRow[], institutionId: string, onProgress?: (current: number, total: number) => void): Promise<BulkUploadResult[]> {
         const results: BulkUploadResult[] = [];
         const CHUNK_SIZE = 5; // Process 5 users at a time
+        const instId = institutionId;
 
         for (let i = 0; i < users.length; i += CHUNK_SIZE) {
             const chunk = users.slice(i, i + CHUNK_SIZE);
@@ -74,7 +75,7 @@ export class BulkUploadService {
                             password: password,
                             role: (user.role && user.role.toLowerCase() === 'teacher') ? 'faculty' : user.role,
                             full_name: user.full_name || user.name,
-                            institution_id: institutionId,
+                            institution_id: instId,
                             register_number: user.register_number,
                             staff_id: user.staff_id || user.staffId,
                             class_name: user.class_name || user.class,
@@ -104,10 +105,10 @@ export class BulkUploadService {
                             await supabase.functions.invoke('create-user', {
                                 body: {
                                     email: user.parent_email,
-                                    password: institutionId, // Default password for parents
+                                    password: instId, // Default password for parents
                                     role: 'parent',
                                     full_name: user.parent_name,
-                                    institution_id: institutionId,
+                                    institution_id: instId,
                                     phone: user.parent_phone || user.parent_contact,
                                     student_id: userId // Link to child
                                 }

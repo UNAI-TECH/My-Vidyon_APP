@@ -55,16 +55,31 @@ export function InstitutionUsers() {
     const { data: institutionStudents = [], isLoading: isStudentsLoading } = useQuery({
         queryKey: ['institution-students', user?.institutionId],
         queryFn: async () => {
-            if (!user?.institutionId) return [];
+            const instId = user?.institutionId;
+            if (!instId) {
+                console.warn('[STUDENTS] No institution identifier in user object:', user);
+                return [];
+            }
+
+            console.log('[STUDENTS] Fetching for institution ID:', instId);
+
             const { data, error } = await supabase
                 .from('students')
                 .select('*')
-                .eq('institution_id', user.institutionId)
+                .eq('institution_id', instId)
                 .order('name');
-            if (error) throw error;
+
+            if (error) {
+                console.error('[STUDENTS] Fetch error:', error);
+                throw error;
+            }
+
+            console.log('[STUDENTS] Successfully fetched. Count:', data?.length);
             return data || [];
         },
         enabled: !!user?.institutionId,
+        staleTime: 0,
+        gcTime: 0,
         refetchOnMount: 'always',
         refetchOnWindowFocus: true
     });
@@ -72,16 +87,15 @@ export function InstitutionUsers() {
     const { data: institutionStaff = [], isLoading: isStaffLoading } = useQuery({
         queryKey: ['institution-staff', user?.institutionId],
         queryFn: async () => {
-            if (!user?.institutionId) return [];
+            const instId = user?.institutionId;
+            if (!instId) return [];
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
-                .eq('institution_id', user.institutionId)
+                .eq('institution_id', instId)
                 .order('full_name');
 
             if (error) throw error;
-            // Client-side filtering to avoid 400 errors if enum values don't match
-            // Client-side filtering to avoid 400 errors if enum values don't match
             const targetRoles = ['faculty', 'admin', 'teacher', 'accountant', 'canteen_manager', 'driver'];
             return (data || []).filter((p: any) => targetRoles.includes(p.role));
         },
@@ -93,11 +107,12 @@ export function InstitutionUsers() {
     const { data: institutionParents = [], isLoading: isParentsLoading } = useQuery({
         queryKey: ['institution-parents', user?.institutionId],
         queryFn: async () => {
-            if (!user?.institutionId) return [];
+            const instId = user?.institutionId;
+            if (!instId) return [];
             const { data, error } = await supabase
                 .from('parents')
                 .select('*')
-                .eq('institution_id', user.institutionId)
+                .eq('institution_id', instId)
                 .order('name');
             if (error) throw error;
             return data || [];
@@ -111,7 +126,8 @@ export function InstitutionUsers() {
     const { subscribeToTable } = useWebSocketContext();
 
     useEffect(() => {
-        if (!user?.institutionId) return;
+        const instId = user?.institutionId;
+        if (!instId) return;
 
         // Subscribe to Students
         const unsubStudents = subscribeToTable('students', () => {

@@ -174,7 +174,7 @@ export function useStudentDashboard(studentId?: string, institutionId?: string) 
             const { data } = await supabase
                 .from('announcements')
                 .select('title, content, published_at')
-                .eq('institution_id', instUuid)
+                .eq('institution_id', institutionId)
                 .or('title.ilike.%holiday%,title.ilike.%leave%,title.ilike.%closed%,title.ilike.%rain%,content.ilike.%holiday%');
 
             // Map published_at to YYYY-MM-DD

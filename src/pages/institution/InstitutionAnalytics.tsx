@@ -66,19 +66,20 @@ export function InstitutionAnalytics() {
                 .eq('institution_id', user!.institutionId);
 
             // 3. Fetch Institution Settings & Holidays for Overall Attendance
-            // We need to resolve the Text ID for academic_events
+            // We use the text-based institutionId for academic_events and announcements
+            const institutionTextId = user?.institutionId;
+            const institutionUuid = (user as any)?.institutionUuid;
+
             const { data: instSettings } = await supabase
                 .from('institutions')
                 .select('*')
-                .eq('id', user!.institutionId) // user.institutionId is likely UUID
+                .eq('institution_id', institutionTextId)
                 .single();
-
-            const institutionTextId = instSettings?.institution_id;
 
             const { data: holidaysData } = await supabase
                 .from('academic_events')
                 .select('start_date, end_date')
-                .eq('institution_id', institutionTextId) // Use Text ID
+                .eq('institution_id', institutionTextId) 
                 .eq('event_type', 'holiday');
 
             const holidays: string[] = [];
@@ -96,16 +97,16 @@ export function InstitutionAnalytics() {
             const { data: announcementData } = await supabase
                 .from('announcements')
                 .select('title, content, published_at')
-                .eq('institution_id', user!.institutionId) // UUID
+                .eq('institution_id', institutionTextId) 
                 .or('title.ilike.%holiday%,title.ilike.%leave%,title.ilike.%closed%,title.ilike.%rain%,content.ilike.%holiday%');
 
-            const announcementHolidays = (announcementData || []).map(a => a.published_at.split('T')[0]);
+            const announcementHolidays = (announcementData || []).map(a => a.published_at?.split('T')[0]);
 
             // 4. Fetch Overall Attendance Count (Present)
             const { count: overallPresentCount } = await supabase
                 .from('student_attendance')
                 .select('*', { count: 'exact', head: true })
-                .eq('institution_id', user!.institutionId)
+                .eq('institution_id', institutionTextId)
                 .eq('status', 'present')
                 .gte('attendance_date', instSettings?.academic_year_start || format(new Date(), 'yyyy-MM-dd'));
 

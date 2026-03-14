@@ -91,12 +91,7 @@ export function FacultyDashboard() {
               </div>
               <span className="shortcut-label">{t.nav.leave}</span>
             </Link>
-            <Link to="/faculty/announcements" className="shortcut-card">
-              <div className="shortcut-icon-wrapper bg-yellow-100 text-yellow-600">
-                <Plus className="w-6 h-6" />
-              </div>
-              <span className="shortcut-label">{t.nav.announcements}</span>
-            </Link>
+
             <Link to="/faculty/settings" className="shortcut-card">
               <div className="shortcut-icon-wrapper bg-gray-100 text-gray-600">
                 <Settings className="w-6 h-6" />
